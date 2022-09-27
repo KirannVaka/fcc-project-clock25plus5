@@ -5,13 +5,29 @@ class Clock extends Component {
   state = {
     breakTimer: { time: { m: 0, s: 0 }, seconds: 0 },
     sessionTimer: { time: { m: 0, s: 0 }, seconds: 0 },
-    breakLength: 1,
-    sessionLength: 1,
+    breakLength: 5,
+    sessionLength: 25,
     timerLabel: true,
     startStopFlag: true,
   };
 
   newintervalId = 0;
+
+  //initiate values of timer on load
+  componentDidMount = () => {
+    let sessiomTimeLeftVar = this.secondsToTime(this.state.sessionLength * 60);
+    let breakTimeLeftVar = this.secondsToTime(this.state.breakLength * 60);
+    this.setState({
+      sessionTimer: {
+        time: sessiomTimeLeftVar,
+        seconds: this.state.sessionLength * 60,
+      },
+      breakTimer: {
+        time: breakTimeLeftVar,
+        seconds: this.state.breakLength * 60,
+      },
+    });
+  };
 
   handleStartStop = () => {
     if (this.state.startStopFlag) {
@@ -33,10 +49,10 @@ class Clock extends Component {
     else sessionTimeTracker -= 1;
     console.log("2", timerLabel, breakTimeTracker, sessionTimeTracker);
 
-    if (breakTimeTracker == 0) {
+    if (breakTimeTracker < 0) {
       timerLabel = true;
       breakTimeTracker = this.state.breakLength * 60;
-    } else if (sessionTimeTracker == 0) {
+    } else if (sessionTimeTracker < 0) {
       timerLabel = false;
       sessionTimeTracker = this.state.sessionLength * 60;
     }
@@ -57,21 +73,6 @@ class Clock extends Component {
     // Check if we're at zero.
   };
 
-  componentDidMount = () => {
-    let sessiomTimeLeftVar = this.secondsToTime(this.state.sessionLength * 60);
-    let breakTimeLeftVar = this.secondsToTime(this.state.breakLength * 60);
-    this.setState({
-      sessionTimer: {
-        time: sessiomTimeLeftVar,
-        seconds: this.state.sessionLength,
-      },
-      breakTimer: {
-        time: breakTimeLeftVar,
-        seconds: this.state.breakLength,
-      },
-    });
-  };
-
   secondsToTime = (secs) => {
     // let divisor_for_minutes = secs % (60 * 60);
     let minutes = Math.floor(secs / 60);
@@ -90,11 +91,10 @@ class Clock extends Component {
     const value = currentTarget.value;
     let breakLength = this.state.breakLength;
     let sessionLength = this.state.sessionLength;
-    if (value == "B+" && breakLength < 60) breakLength += 1;
-    else if (value == "B-" && breakLength > 0) breakLength -= 1;
-    else if (value == "S+" && sessionLength < 60) sessionLength += 1;
-    else if (value == "S-" && sessionLength > 0) sessionLength -= 1;
-    console.log(breakLength, this.state.breakLength);
+    if (value === "B+" && breakLength < 60) breakLength += 1;
+    else if (value === "B-" && breakLength > 1) breakLength -= 1;
+    else if (value === "S+" && sessionLength < 60) sessionLength += 1;
+    else if (value === "S-" && sessionLength > 1) sessionLength -= 1;
 
     this.setState((prevState) => {
       prevState.breakTimer.time = this.secondsToTime(breakLength * 60);
@@ -108,9 +108,9 @@ class Clock extends Component {
   };
 
   handleReset = () => {
+    clearInterval(this.newIntervalId);
     let sessiomTimeLeftVar = this.secondsToTime(1500);
     let breakTimeLeftVar = this.secondsToTime(300);
-    clearInterval(this.newIntervalId);
     this.setState({
       sessionTimer: { time: sessiomTimeLeftVar, seconds: 1500 },
       breakTimer: { time: breakTimeLeftVar, seconds: 300 },
@@ -119,11 +119,18 @@ class Clock extends Component {
       timerLabel: true,
       startStopFlag: true,
     });
+    console.log(this.state);
   };
 
   render() {
-    const { sessionTimer, breakTimer, timerLabel, breakLength, sessionLength } =
-      this.state;
+    const {
+      sessionTimer,
+      breakTimer,
+      timerLabel,
+      breakLength,
+      sessionLength,
+      startStopFlag,
+    } = this.state;
     let renderingValue = "";
     if (timerLabel) {
       renderingValue = sessionTimer;
@@ -131,14 +138,18 @@ class Clock extends Component {
       renderingValue = breakTimer;
     }
 
+    const renderClass = !startStopFlag ? "disabled" : null;
+
     return (
       <div id="container">
-        <div id="break-label">{breakLength}</div>
-        <div id="session-label">{sessionLength}</div>
+        <div id="break-label">Break Length</div>
+        <div id="session-label">Session Length</div>
+        <div id="break-length">{breakLength}</div>
+        <div id="session-length">{sessionLength}</div>
         <button
           value="B+"
           onClick={this.handleIncrementDecrement}
-          className="btn btn-primary m-1"
+          className={"btn btn-primary m-1 " + renderClass}
           id="break-decrement"
         >
           Break +
@@ -146,7 +157,7 @@ class Clock extends Component {
         <button
           value="B-"
           onClick={this.handleIncrementDecrement}
-          className="btn btn-primary m-1"
+          className={"btn btn-primary m-1 " + renderClass}
           id="break-increment"
         >
           Break -
@@ -154,7 +165,7 @@ class Clock extends Component {
         <button
           value="S-"
           onClick={this.handleIncrementDecrement}
-          className="btn btn-primary m-1"
+          className={"btn btn-primary m-1 " + renderClass}
           id="session-decrement"
         >
           Session -
@@ -162,7 +173,7 @@ class Clock extends Component {
         <button
           value="S+"
           onClick={this.handleIncrementDecrement}
-          className="btn btn-primary m-1"
+          className={"btn btn-primary m-1 " + renderClass}
           id="session-increment"
         >
           Session +
