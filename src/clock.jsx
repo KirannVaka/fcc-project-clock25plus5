@@ -3,30 +3,41 @@ import "bootstrap/dist/css/bootstrap.css";
 
 class Clock extends Component {
   state = {
-    breakTimer: { time: { m: 0, s: 0 }, seconds: 0 },
-    sessionTimer: { time: { m: 0, s: 0 }, seconds: 0 },
+    breakTimer: { m: 0, s: 0 },
+    sessionTimer: { m: 0, s: 0 },
+    timer: 0,
     breakLength: 5,
     sessionLength: 25,
-    timerLabel: true,
-    startStopFlag: true,
+    timerLabel: true, //true indicate session and false indicates break
+    startStopFlag: true, // set to true if start or to false if stop.
   };
 
   newintervalId = 0;
 
   //initiate values of timer on load
   componentDidMount = () => {
-    let sessiomTimeLeftVar = this.secondsToTime(this.state.sessionLength * 60);
-    let breakTimeLeftVar = this.secondsToTime(this.state.breakLength * 60);
     this.setState({
-      sessionTimer: {
-        time: sessiomTimeLeftVar,
-        seconds: this.state.sessionLength * 60,
-      },
-      breakTimer: {
-        time: breakTimeLeftVar,
-        seconds: this.state.breakLength * 60,
-      },
+      sessionTimer: this.secondsToTime(this.state.sessionLength * 60),
+      breakTimer: this.secondsToTime(this.state.breakLength * 60),
+      timer: this.state.sessionLength * 60,
     });
+  };
+
+  componentDidUpdate = (prevProps, prevState) => {
+    if (prevState.breakLength !== this.state.breakLength)
+      this.setState({
+        breakTimer: {
+          time: this.secondsToTime(this.state.breakLength * 60),
+          seconds: this.state.breakLength * 60,
+        },
+      });
+    if (prevState.sessionLength !== this.state.sessionLength)
+      this.setState({
+        sessionTimer: {
+          time: this.secondsToTime(this.state.sessionLength * 60),
+          seconds: this.state.sessionLength * 60,
+        },
+      });
   };
 
   handleStartStop = () => {
@@ -41,31 +52,46 @@ class Clock extends Component {
   countDown = () => {
     // Remove one second, set state so a re-render happens.
     let timerLabel = this.state.timerLabel;
-    let breakTimeTracker = this.state.breakTimer.seconds;
-    let sessionTimeTracker = this.state.sessionTimer.seconds;
-    console.log("1", timerLabel, breakTimeTracker, sessionTimeTracker);
+    let breakTimeTracker = { ...this.state.breakTimer };
+    let sessionTimeTracker = { ...this.state.sessionTimer };
+    console.log(
+      "1",
+      timerLabel,
+      breakTimeTracker.seconds,
+      sessionTimeTracker.seconds
+    );
 
-    if (!timerLabel) breakTimeTracker -= 1;
-    else sessionTimeTracker -= 1;
-    console.log("2", timerLabel, breakTimeTracker, sessionTimeTracker);
+    if (timerLabel === false) this.setState({ breakLength });
+    else sessionTimeTracker.seconds -= 1;
+    console.log(
+      "2",
+      timerLabel,
+      breakTimeTracker.seconds,
+      sessionTimeTracker.seconds
+    );
 
-    if (breakTimeTracker < 0) {
+    if (breakTimeTracker.seconds < 0) {
       timerLabel = true;
-      breakTimeTracker = this.state.breakLength * 60;
-    } else if (sessionTimeTracker < 0) {
+      breakTimeTracker.seconds = this.state.breakLength * 60;
+    } else if (sessionTimeTracker.seconds < 0) {
       timerLabel = false;
-      sessionTimeTracker = this.state.sessionLength * 60;
+      sessionTimeTracker.seconds = this.state.sessionLength * 60;
     }
-    console.log("3", timerLabel, breakTimeTracker, sessionTimeTracker);
+    console.log(
+      "3",
+      timerLabel,
+      breakTimeTracker.seconds,
+      sessionTimeTracker.seconds
+    );
 
     this.setState({
       sessionTimer: {
-        time: this.secondsToTime(sessionTimeTracker),
-        seconds: sessionTimeTracker,
+        time: this.secondsToTime(sessionTimeTracker.seconds),
+        seconds: sessionTimeTracker.seconds,
       },
       breakTimer: {
-        time: this.secondsToTime(breakTimeTracker),
-        seconds: breakTimeTracker,
+        time: this.secondsToTime(breakTimeTracker.seconds),
+        seconds: breakTimeTracker.seconds,
       },
       timerLabel,
     });
@@ -89,22 +115,26 @@ class Clock extends Component {
 
   handleIncrementDecrement = ({ currentTarget }) => {
     const value = currentTarget.value;
-    let breakLength = this.state.breakLength;
-    let sessionLength = this.state.sessionLength;
-    if (value === "B+" && breakLength < 60) breakLength += 1;
-    else if (value === "B-" && breakLength > 1) breakLength -= 1;
-    else if (value === "S+" && sessionLength < 60) sessionLength += 1;
-    else if (value === "S-" && sessionLength > 1) sessionLength -= 1;
+    const breakLength = this.state.breakLength;
+    const sessionLength = this.state.sessionLength;
+    if (value === "B+" && breakLength < 60)
+      this.setState({ breakLength: this.state.breakLength + 1 });
+    else if (value === "B-" && breakLength > 1)
+      this.setState({ breakLength: this.state.breakLength - 1 });
+    else if (value === "S+" && sessionLength < 60)
+      this.setState({ sessionLength: this.state.sessionLength + 1 });
+    else if (value === "S-" && sessionLength > 1)
+      this.setState({ sessionLength: this.state.sessionLength - 1 });
 
-    this.setState((prevState) => {
-      prevState.breakTimer.time = this.secondsToTime(breakLength * 60);
-      prevState.sessionTimer.time = this.secondsToTime(sessionLength * 60);
-      prevState.breakTimer.seconds = breakLength * 60;
-      prevState.sessionTimer.seconds = sessionLength * 60;
-      prevState.breakLength = breakLength;
-      prevState.sessionLength = sessionLength;
-      return prevState;
-    });
+    // this.setState((prevState) => {
+    //   prevState.breakTimer.time = this.secondsToTime(breakLength * 60);
+    //   prevState.sessionTimer.time = this.secondsToTime(sessionLength * 60);
+    //   prevState.breakTimer.seconds = breakLength * 60;
+    //   prevState.sessionTimer.seconds = sessionLength * 60;
+    //   prevState.breakLength = breakLength;
+    //   prevState.sessionLength = sessionLength;
+    //   return prevState;
+    // });
   };
 
   handleReset = () => {
@@ -112,8 +142,8 @@ class Clock extends Component {
     let sessiomTimeLeftVar = this.secondsToTime(1500);
     let breakTimeLeftVar = this.secondsToTime(300);
     this.setState({
-      sessionTimer: { time: sessiomTimeLeftVar, seconds: 1500 },
-      breakTimer: { time: breakTimeLeftVar, seconds: 300 },
+      sessionTimer: { time: sessiomTimeLeftVar, seconds: 25 * 60 },
+      breakTimer: { time: breakTimeLeftVar, seconds: 5 * 60 },
       breakLength: 5,
       sessionLength: 25,
       timerLabel: true,
