@@ -36,3 +36,23 @@
     transform: rotate(360deg);
   }
 }
+
+#container {
+  font-size: 20px;
+  font-weight: bold;
+  width: 500px;
+  margin: 100px auto;
+  padding: 15px;
+  justify-content: center;
+  text-align: center;
+}
+
+.breakLength,
+.sessionLength {
+  display: block;
+  margin: 10px 0;
+}
+
+button {
+  max-height: 40px;
+}

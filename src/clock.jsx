@@ -12,35 +12,49 @@ class Clock extends Component {
 
   newintervalId = 0;
 
-  //initiate values of timer on load
-
   handleStartStop = () => {
-    if (!this.state.startFlag) {
+    const { startFlag } = this.state;
+
+    if (!startFlag) {
       this.newIntervalId = setInterval(() => this.countDown(), 1000);
-    } else clearInterval(this.newIntervalId);
+    } else {
+      clearInterval(this.newIntervalId);
+    }
 
     this.setState({
-      startFlag: !this.state.startFlag,
+      startFlag: !startFlag,
     });
+  };
+
+  timeFormatter = () => {
+    // let divisor_for_minutes = secs % (60 * 60);
+    const totalCount = this.state.timer;
+    if (totalCount <= 0) return "00:00";
+    let minutes = Math.floor(totalCount / 60);
+    let seconds = totalCount - minutes * 60;
+    return (
+      (minutes < 10 ? "0" + minutes : minutes) +
+      ":" +
+      (seconds < 10 ? "0" + seconds : seconds)
+    );
   };
 
   countDown = () => {
     // Remove one second, set state so a re-render happens.
-    const timerLabel = this.state.timerLabel;
+    const { timerLabel, timer } = this.state;
 
-    this.setState({
-      timer: this.state.timer - 1,
-    });
-
-    if (this.state.timer < 0) {
-      let timerLabel = this.state.timerLabel == "Session" ? "Break" : "Session";
-      let type =
-        this.state.timerLabel == "Session" ? "breakLength" : "sessionLength";
+    if (timer < 0) {
+      let timerLabelToUpdate = timerLabel === "Session" ? "Break" : "Session";
+      let type = timerLabel === "Session" ? "breakLength" : "sessionLength";
       this.setState({
         timer: this.state[type] * 60,
-        timerLabel,
+        timerLabel: timerLabelToUpdate,
       });
       this.audioBeep.play();
+    } else {
+      this.setState({
+        timer: timer - 1,
+      });
     }
 
     // if (timerLabel === "Session" && this.state.timer < 0) {
@@ -58,21 +72,9 @@ class Clock extends Component {
     // }
   };
 
-  timeFormatter = () => {
-    // let divisor_for_minutes = secs % (60 * 60);
-    if (this.state.timer <= 0) return "00:00";
-    let minutes = Math.floor(this.state.timer / 60);
-    let seconds = this.state.timer - minutes * 60;
-    return (
-      (minutes < 10 ? "0" + minutes : minutes) +
-      ":" +
-      (seconds < 10 ? "0" + seconds : seconds)
-    );
-  };
-
   handleIncrementDecrement = (type, operator) => {
-    // if (this.state.startFlag) return;
-    let typeToUpdate = type == "Session" ? "sessionLength" : "breakLength";
+    if (this.state.startFlag) return;
+    let typeToUpdate = type === "Session" ? "sessionLength" : "breakLength";
 
     if (this.state.timerLabel !== type) {
       if (operator === "-" && this.state[typeToUpdate] > 1) {
@@ -142,39 +144,46 @@ class Clock extends Component {
 
     return (
       <div id="container">
-        <div id="break-label">Break Length</div>
-        <div id="break-length">{breakLength}</div>
-        <div id="session-label">Session Length</div>
-        <div id="session-length">{sessionLength}</div>
+        <div class="row">
+          <div class="breakLength col">
+            <div id="break-label">Break Length</div>
+            <button
+              onClick={() => this.handleIncrementDecrement("Break", "+")}
+              className={"btn btn-primary m-1 " + renderClass}
+              id="break-increment"
+            >
+              Break +
+            </button>
+            <div id="break-length">{breakLength}</div>
+            <button
+              onClick={() => this.handleIncrementDecrement("Break", "-")}
+              className={"btn btn-primary m-1 " + renderClass}
+              id="break-decrement"
+            >
+              Break -
+            </button>
+          </div>
 
-        <button
-          onClick={() => this.handleIncrementDecrement("Break", "+")}
-          className={"btn btn-primary m-1 " + renderClass}
-          id="break-decrement"
-        >
-          Break +
-        </button>
-        <button
-          onClick={() => this.handleIncrementDecrement("Break", "-")}
-          className={"btn btn-primary m-1 " + renderClass}
-          id="break-increment"
-        >
-          Break -
-        </button>
-        <button
-          onClick={() => this.handleIncrementDecrement("Session", "-")}
-          className={"btn btn-primary m-1 " + renderClass}
-          id="session-decrement"
-        >
-          Session -
-        </button>
-        <button
-          onClick={() => this.handleIncrementDecrement("Session", "+")}
-          className={"btn btn-primary m-1 " + renderClass}
-          id="session-increment"
-        >
-          Session +
-        </button>
+          <div class="sessionLength col">
+            <div id="session-label">Session Length</div>
+            <button
+              onClick={() => this.handleIncrementDecrement("Session", "+")}
+              className={"btn btn-primary m-1 " + renderClass}
+              id="session-increment"
+            >
+              Session +
+            </button>
+            <div id="session-length">{sessionLength}</div>
+            <button
+              onClick={() => this.handleIncrementDecrement("Session", "-")}
+              className={"btn btn-primary m-1 " + renderClass}
+              id="session-decrement"
+            >
+              Session -
+            </button>
+          </div>
+        </div>
+
         <div id="timer-label">{timerLabel}</div>
         <div id="time-left">{this.timeFormatter()}</div>
         <button
